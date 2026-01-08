@@ -44,7 +44,7 @@ DEFAULTS = {
     "interpolation": "bilinear",
     "world_size": 1,
     "dist_url": "env://",
-    "loss": "MKLoss",
+    "loss": "GMLoss",
     "logit": "l1_dist",
     "logit_temperature": 1.0,
     "classifier": "nc",
