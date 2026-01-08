@@ -1,0 +1,73 @@
+# Config file for Few-Shot Learning
+
+[data]
+path = "data/cifar_fs"
+val_resize_size = 84
+val_crop_size = 84
+train_crop_size = 84
+backend = "PIL"
+auto_augment = ""
+ra_magnitude = 9
+augmix_severity = 3
+random_erase = 0.0
+ra_sampler = false
+ra_reps = 3
+interpolation = "bilinear"
+class_aware_sampler = ""
+
+[model]
+name = "resnet12"
+projection = true
+projection_feat_dim = 192
+ema = false
+ema_steps = 32
+ema_decay = 0.99998
+
+[training]
+# clip_grad_norm = 1.0
+amp = true
+device = "cuda"
+workers = 16
+batch_size = 128            # total_batch_size = num_gpus * batch_size
+epochs = 120
+optimizer = "sgd"
+lr = 0.1
+momentum = 0.9
+weight_decay = 0.0005
+lr_scheduler = "steplr"
+lr_step_size = 84
+lr_gamma = 0.01
+lr_min = 0.0
+lr_warmup_epochs = 10
+lr_warmup_method = "linear"
+lr_warmup_decay = 0.033
+loss = "GMLoss"
+logit = "l1_dist"
+logit_temperature = 1.0
+class_proxy = true
+norm = 2.0
+
+[distributed]
+world_size = 1
+dist_url = "env://"
+
+[logging]
+output_dir = "result/gm"
+resume = ""
+print_freq = 10
+val_freq = 5
+start_epoch = 0
+save_all_checkpoints = false
+
+[evaluation]
+test_only = false
+classifier = "nc"
+num_NN = 1
+median_prototype = false
+test_iter = 10000
+val_iter = 3000
+test_way = 5
+test_query = 15
+shot = "1,5"
+eval_norm_type = "CCOS"
+tsne = false

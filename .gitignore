@@ -1,0 +1,17 @@
+data/mini_imagenet/*
+!data/mini_imagenet/.gitkeep
+data/cifar_fs/*
+!data/cifar_fs/.gitkeep
+data/tiered_imagenet/*
+!data/tiered_imagenet/.gitkeep
+data/CUB_200_2011/*
+runs/*
+!runs/.gitkeep
+result/*
+!result/.gitkeep
+*/__pycache__/*
+*.*.pyc
+*.pyc
+*.png
+tsne/*
+*.log

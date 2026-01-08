@@ -1,0 +1,27 @@
+[project]
+name = "GML"
+version = "1.0"
+description = "Geometric Mean Improves Loss For Few-Shot Learning"
+readme = "README.md"
+requires-python = ">=3.8, <3.9"
+dependencies = [
+    "numpy==1.23.5",
+    "scipy==1.10.1",
+    "scikit-learn==1.3.0",
+    "torch",
+    "torchvision",
+    "tensorboard==2.12.1",
+    "matplotlib==3.7.2",
+    "tensorboard-data-server",
+    "tomli",
+    "rich",
+]
+
+[[tool.uv.index]]
+name = "pytorch-cu121"
+url = "https://download.pytorch.org/whl/cu121"
+explicit = true
+
+[tool.uv.sources]
+torch = { index = "pytorch-cu121" }
+torchvision = { index = "pytorch-cu121" }
