@@ -13,7 +13,7 @@ Few-shot learning (FSL) is a challenging task in machine learning, demanding a m
 We recommend using [uv](https://github.com/astral-sh/uv) for fast dependency management.
 
 ```bash
-git clone https://github.com/koko9tsu/GeometricMeanLoss.git
+git clone https://github.com/colure/GeometricMeanLoss.git
 cd GeometricMeanLoss
 
 # Initialize and install dependencies automatically
