@@ -238,10 +238,10 @@ class MetricLogger:
         total_time_str = str(datetime.timedelta(seconds=int(time.time() - start_time)))
         if hasattr(progress, "console"):
             progress.console.print(
-                f"[bold green]✓[/bold green] {header} Total time: {total_time_str}"
+                f"[bold green]✓[/bold green] {header} Total time: {total_time_str}\n"
             )
         else:
-            print(f"{header} Total time: {total_time_str}")
+            print(f"{header} Total time: {total_time_str}\n")
 
 
 class ExponentialMovingAverage(torch.optim.swa_utils.AveragedModel):

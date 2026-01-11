@@ -35,6 +35,7 @@ def main(args):
     from rich import box
 
     console = Console()
+    console.clear()
     table = Table(
         title="Configuration",
         show_header=True,
@@ -144,6 +145,7 @@ def main(args):
         return print("t-SNE visualization is saved.")
 
     if args.test_only:
+        print("Start testing")
         torch.backends.cudnn.benchmark = False
         torch.backends.cudnn.deterministic = True
         if model_ema:
@@ -188,6 +190,7 @@ def main(args):
                 device=device,
                 header="Test",
             )
+        console.print("[bold green]✓[/bold green] Testing completed!")
         return
 
     print("Start training")
@@ -208,13 +211,21 @@ def main(args):
     )
     from rich.console import Console
     from rich.live import Live
-    from rich.layout import Layout
+    from rich.console import Group
     from rich.table import Table
 
-    layout = Layout()
-    layout.split_column(
-        Layout(name="progress", size=3),
-        Layout(name="metrics"),
+    class MutableRenderable:
+        def __init__(self, renderable=None):
+            self.renderable = renderable
+
+        def __rich__(self):
+            return self.renderable
+
+        def update(self, renderable):
+            self.renderable = renderable
+
+    metrics_proxy = MutableRenderable(
+        Table(title="Waiting for metrics...", show_header=False)
     )
 
     console = Console()
@@ -233,10 +244,9 @@ def main(args):
         transient=False,
     )
 
-    layout["progress"].update(progress)
-    layout["metrics"].update(Table(title="Waiting for metrics...", show_header=False))
+    live_group = Group(progress, metrics_proxy)
 
-    with Live(layout, refresh_per_second=10, console=console) as live:
+    with Live(live_group, refresh_per_second=10, console=console) as live:
         epoch_task = progress.add_task(
             "Overall Progress",
             total=args.epochs - args.start_epoch,
@@ -264,7 +274,7 @@ def main(args):
                 scaler,
                 writer,
                 progress=progress,
-                log_layout=layout["metrics"],
+                log_layout=metrics_proxy,
                 epoch_task_id=epoch_task,
             )
 
@@ -283,7 +293,7 @@ def main(args):
                     device=device,
                     header="Val",
                     progress=progress,
-                    log_layout=layout["metrics"],
+                    log_layout=metrics_proxy,
                 )
 
                 # Track best accuracy and save best checkpoint
@@ -318,7 +328,7 @@ def main(args):
                         device=device,
                         header="Val (EMA)",
                         progress=progress,
-                        log_layout=layout["metrics"],
+                        log_layout=metrics_proxy,
                     )
 
                     # Track best EMA accuracy and save best EMA checkpoint
