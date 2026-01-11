@@ -6,7 +6,7 @@ from src import utils
 
 def create_model(args):
     print()
-    print("Creating model")
+    print("Initializing model...\n")
     model = getattr(models, args.model)(
         num_classes=args.num_classes,
         feature_dim=args.projection_feat_dim,

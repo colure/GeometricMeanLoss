@@ -28,7 +28,7 @@ def evaluate(
         train_avg = 0
         num = 0
 
-        msg = "Train (stats)"
+        msg = f"{header} (stats)"
         if progress and hasattr(progress, "console"):
             progress.console.print(msg)
         else:
@@ -93,6 +93,7 @@ def evaluate(
             table.add_row(k, f"{metric_logger.meters[k].global_avg:.2f}")
 
         console.print(table)
+        console.print()
     else:
         from rich.table import Table
         from rich.console import Console
@@ -111,5 +112,6 @@ def evaluate(
             table.add_row(k, f"{metric_logger.meters[k].global_avg:.2f}")
 
         console.print(table)
+        console.print()
 
     return metric_logger
