@@ -4,7 +4,7 @@
 
 Official implementation of [**"Geometric Mean Improves Loss For Few-Shot Learning"**](https://arxiv.org/abs/2501.14593), by Tong Wu and Takumi Kobayashi.
 
-## About
+## Abstract
 
 Few-shot learning (FSL) is a challenging task in machine learning, demanding a model to render discriminative classification by using only a few labeled samples. In the literature of FSL, deep models are trained in a manner of metric learning to provide metric in a feature space which is well generalizable to classify samples of novel classes; in the space, even a few amount of labeled training examples can construct an effective classifier. In this paper, we propose a novel FSL loss based on geometric mean to embed discriminative metric into deep features. In contrast to the other losses such as utilizing arithmetic mean in softmax-based formulation, the proposed method leverages geometric mean to aggregate pair-wise relationships among samples for enhancing discriminative metric across class categories. The proposed loss is not only formulated in a simple form but also is thoroughly analyzed in theoretical ways to reveal its favorable characteristics which are favorable for learning feature metric in FSL. In the experiments on few-shot image classification tasks, the method produces competitive performance in comparison to the other losses.
 
