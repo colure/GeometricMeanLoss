@@ -15,3 +15,8 @@ result/*
 *.png
 tsne/*
 *.log
+# Model checkpoints and training outputs
+*.pth
+*.ckpt
+debug_run/
+checkpoints/
