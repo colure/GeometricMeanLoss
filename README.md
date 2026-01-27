@@ -32,7 +32,7 @@ uv sync
 - **CUB-200-2011**: [Caltech-UCSD Birds dataset](https://www.vision.caltech.edu/datasets/)
 
 
-Place datasets in the [./data](./data) directory (e.g., `mini_imagenet`, `cifar_fs`). You can adjust default paths in [./config.toml](./config.toml).
+Place datasets in the [./data](./data) directory (e.g., [./data/mini_imagenet](./data/mini_imagenet), [./data/cifar_fs](./data/cifar_fs)). You can adjust default paths in [./config.toml](./config.toml).
 
 ### 2. Configuration
 - **[./config.toml](./config.toml)**: Centralized configuration for all hyperparameters and paths.
