@@ -32,10 +32,10 @@ uv sync
 - **CUB-200-2011**: [Caltech-UCSD Birds dataset](https://www.vision.caltech.edu/datasets/)
 
 
-Place datasets in the [./data](./data) directory (e.g., [./data/mini_imagenet](./data/mini_imagenet), [./data/cifar_fs](./data/cifar_fs)). You can adjust default paths in [./config.toml](./config.toml).
+Place datasets in the [`./data`](./data) directory (e.g., [`./data/mini_imagenet`](./data/mini_imagenet), [`./data/cifar_fs`](./data/cifar_fs)). You can adjust default paths in [`./config.toml`](./config.toml).
 
 ### 2. Configuration
-- **[./config.toml](./config.toml)**: Centralized configuration for all hyperparameters and paths.
+- **[`./config.toml`](./config.toml)**: Centralized configuration for all hyperparameters and paths.
 - **CLI Overrides**: Override any TOML setting via command line (e.g., `--batch-size 64`).
 
 ### 3. Run
@@ -47,7 +47,7 @@ uv run torchrun --nproc_per_node=${num_gpus} train.py --loss GMLoss --logit l1_d
 # To evaluate a checkpoint:
 uv run python train.py --resume ./result/my_experiment/checkpoints/best_shot5_model.pth --test-only
 ```
-More examples can be found in [./train_script.sh](./train_script.sh).
+More examples can be found in [`./train_script.sh`](./train_script.sh).
 
 ## Results
 
@@ -117,7 +117,7 @@ If you find this project or paper useful in your research, please consider citin
 ## Acknowledgments
 
 Parts of this code inspired by the following projects:
-- [On-episodes-fsl](https://github.com/fiveai/on-episodes-fsl)
+- [on-episodes-fsl](https://github.com/fiveai/on-episodes-fsl)
 - [vision](https://github.com/pytorch/vision)
 
 ## License
