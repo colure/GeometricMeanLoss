@@ -43,7 +43,9 @@ We utilize [Distributed Data Parallel (DDP)](https://docs.pytorch.org/docs/stabl
 ```bash
 # To train the model:
 uv run torchrun --nproc_per_node=${num_gpus} train.py --loss GMLoss --logit l1_dist --output-dir ./result/my_experiment
+```
 
+```bash
 # To evaluate a checkpoint:
 uv run python train.py --resume ./result/my_experiment/checkpoints/best_shot5_model.pth --test-only
 ```
