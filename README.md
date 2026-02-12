@@ -47,7 +47,7 @@ uv run torchrun --nproc_per_node=${num_gpus} train.py --loss GMLoss --logit l1_d
 
 ```bash
 # To evaluate a checkpoint:
-uv run python train.py --resume ./result/my_experiment/checkpoints/best_shot5_model.pth --test-only
+uv run python train.py --resume ./result/my_experiment/checkpoints/checkpoint_best_shot5.pth --test-only
 ```
 More examples can be found in [`./train_script.sh`](./train_script.sh).
 

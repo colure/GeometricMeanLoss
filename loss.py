@@ -172,14 +172,18 @@ class AsymmetricLoss(BCELoss):
 
         if self.gamma_neg > 0 or self.gamma_pos > 0:
             if self.disable_torch_grad_focal_loss:
-                torch.set_grad_enabled(False)
-            pt = xs_pos * one_hot_yq + xs_neg * (~one_hot_yq)
-            one_sided_gamma = self.gamma_pos * one_hot_yq + self.gamma_neg * (
-                ~one_hot_yq
-            )
-            one_sided_w = torch.pow((1 - pt).clamp(min=0), one_sided_gamma)
-            if self.disable_torch_grad_focal_loss:
-                torch.set_grad_enabled(True)
+                with torch.no_grad():
+                    pt = xs_pos * one_hot_yq + xs_neg * (~one_hot_yq)
+                    one_sided_gamma = self.gamma_pos * one_hot_yq + self.gamma_neg * (
+                        ~one_hot_yq
+                    )
+                    one_sided_w = torch.pow((1 - pt).clamp(min=0), one_sided_gamma)
+            else:
+                pt = xs_pos * one_hot_yq + xs_neg * (~one_hot_yq)
+                one_sided_gamma = self.gamma_pos * one_hot_yq + self.gamma_neg * (
+                    ~one_hot_yq
+                )
+                one_sided_w = torch.pow((1 - pt).clamp(min=0), one_sided_gamma)
             loss *= one_sided_w
 
         return -loss.sum(dim=-1).mean()

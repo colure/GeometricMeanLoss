@@ -56,10 +56,10 @@ def evaluate(
         test_labels = utils.gather_across_processes(torch.cat(test_labels))
 
     if utils.is_main_process():
-        train_avg = train_avg.cpu().data.numpy()
+        train_avg = train_avg.cpu().numpy()
         out_dict = collections.defaultdict(list)
         for out, label in zip(test_embeddings, test_labels):
-            out_dict[label.item()].append(out.cpu().data.numpy())
+            out_dict[label.item()].append(out.cpu().numpy())
 
         for s in shots:
             shot_info = meta_evaluate(out_dict, train_avg, s, num_iter, eval_params)
@@ -74,6 +74,7 @@ def evaluate(
     else:
         for s in shots:
             metric_logger.meters[f"shot{s}_acc"].update(0, n=1)
+            metric_logger.meters[f"shot{s}_conf"].update(0, n=1)
 
     console = progress.console if progress and hasattr(progress, "console") else None
 

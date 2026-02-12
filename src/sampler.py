@@ -52,11 +52,7 @@ class ClassAwareDistributedSampler(torch.utils.data.distributed.DistributedSampl
         self.y = torch.tensor([y[1] for y in dataset.samples])
         max_samp_num = max([(self.y == c).sum().item() for c in self.y.unique()])
         num_samples = max_samp_num * len(self.y.unique())
-        self.num_samples = (
-            math.ceil(num_samples / self.num_replicas)
-            if self.drop_last
-            else math.ceil(num_samples / self.num_replicas)
-        )
+        self.num_samples = math.ceil(num_samples / self.num_replicas)
         self.total_size = self.num_samples * self.num_replicas
         self.samples_in_batch = [class_per_batch, sample_per_class]
 

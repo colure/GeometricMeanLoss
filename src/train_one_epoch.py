@@ -33,7 +33,8 @@ def train_one_epoch(
         )
     ):
         start_time = time.time()
-        image, target = image.to(device), target.to(device)
+        image = image.to(device, non_blocking=True)
+        target = target.to(device, non_blocking=True)
         with torch.amp.autocast("cuda", enabled=scaler is not None):
             loss = criterion(model(image)[0], target)
 
@@ -42,7 +43,10 @@ def train_one_epoch(
             scaler.scale(loss).backward()
             if args.clip_grad_norm is not None:
                 scaler.unscale_(optimizer)
-                nn.utils.clip_grad_norm_(model.module.parameters(), args.clip_grad_norm)
+                clip_target = getattr(model, "module", model)
+                nn.utils.clip_grad_norm_(
+                    clip_target.parameters(), args.clip_grad_norm
+                )
             scaler.step(optimizer)
             scaler.update()
         else:

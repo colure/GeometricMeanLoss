@@ -2,6 +2,18 @@ import argparse
 import os
 import tomli
 
+
+def str2bool(v):
+    if isinstance(v, bool):
+        return v
+    v = v.lower()
+    if v in ("yes", "true", "t", "y", "1"):
+        return True
+    if v in ("no", "false", "f", "n", "0"):
+        return False
+    raise argparse.ArgumentTypeError(f"Invalid boolean value: {v}")
+
+
 DEFAULTS = {
     "data_path": "data/mini_imagenet",
     "val_resize_size": 84,
@@ -159,8 +171,8 @@ class ConfigManager:
         parser.add_argument(
             "--projection",
             default=self._get_val("model", "projection", "projection"),
-            type=bool,
-        )  # Argparse bool is tricky, but here it's default value
+            type=str2bool,
+        )
         parser.add_argument(
             "--projection-feat-dim",
             default=self._get_val(
@@ -186,7 +198,7 @@ class ConfigManager:
 
         # Training
         parser.add_argument(
-            "--amp", default=self._get_val("training", "amp", "amp"), type=bool
+            "--amp", default=self._get_val("training", "amp", "amp"), type=str2bool
         )
         parser.add_argument(
             "--device", default=self._get_val("training", "device", "device"), type=str

@@ -65,7 +65,7 @@ def create_optimizer(args, model, criterion):
         )
     elif opt_name == "adamw":
         optimizer = torch.optim.AdamW(
-            filter(lambda p: p.requires_grad, model.parameters()),
+            parameters,
             lr=args.lr,
             weight_decay=args.weight_decay,
         )

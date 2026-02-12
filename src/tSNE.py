@@ -3,6 +3,7 @@ import os
 from datetime import datetime
 import matplotlib.pyplot as plt
 import numpy as np
+import torch
 from sklearn.manifold import TSNE
 from sklearn.neighbors import LocalOutlierFactor
 from torch import distributed as dist
@@ -36,13 +37,14 @@ class TSNEVisualizer:
         self.model.eval()
         output_dict = collections.defaultdict(list)
 
-        for inputs, labels in self.val_loader:
-            inputs = inputs.to(self.args.device)
-            outputs = self.model(inputs)[0].cpu().data.numpy()
-            labels = labels.numpy()
+        with torch.inference_mode():
+            for inputs, labels in self.val_loader:
+                inputs = inputs.to(self.args.device, non_blocking=True)
+                outputs = self.model(inputs)[0].detach().cpu().numpy()
+                labels = labels.numpy()
 
-            for out, label in zip(outputs, labels):
-                output_dict[label.item()].append(out)
+                for out, label in zip(outputs, labels):
+                    output_dict[label.item()].append(out)
 
         return output_dict
 

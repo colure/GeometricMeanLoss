@@ -25,6 +25,7 @@ def main(args):
         if args.output_dir
         else None
     )
+    close_writer = lambda: writer.close() if writer is not None else None
 
     if args.output_dir and not args.test_only:
         utils.mkdir(os.path.join(args.output_dir, "checkpoints"))
@@ -130,18 +131,20 @@ def main(args):
     if args.resume:
         checkpoint = torch.load(args.resume, map_location="cpu", weights_only=False)
         model_without_ddp.load_state_dict(checkpoint["model"])
-        if not args.test_only:
+        if not args.test_only and "optimizer" in checkpoint and "lr_scheduler" in checkpoint:
             optimizer.load_state_dict(checkpoint["optimizer"])
             lr_scheduler.load_state_dict(checkpoint["lr_scheduler"])
-        args.start_epoch = checkpoint["epoch"] + 1
-        if model_ema:
+        if "epoch" in checkpoint:
+            args.start_epoch = checkpoint["epoch"] + 1
+        if model_ema and "model_ema" in checkpoint:
             model_ema.load_state_dict(checkpoint["model_ema"])
-        if scaler:
+        if scaler and "scaler" in checkpoint:
             scaler.load_state_dict(checkpoint["scaler"])
 
     if args.tsne:
         tSNE = TSNEVisualizer(data_loader_val, model_without_ddp, args)
         tSNE.visualize_with_tsne()
+        close_writer()
         return print("t-SNE visualization is saved.")
 
     if args.test_only:
@@ -191,6 +194,7 @@ def main(args):
                 header="Test",
             )
         console.print("[bold green]✓[/bold green] Testing completed!")
+        close_writer()
         return
 
     print("Start training")
@@ -373,6 +377,7 @@ def main(args):
     console.print(
         f"[bold green]✓[/bold green] Training completed! Total time: {total_time_str}"
     )
+    close_writer()
 
 
 if __name__ == "__main__":

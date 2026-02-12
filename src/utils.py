@@ -24,15 +24,19 @@ from torch.utils.tensorboard import SummaryWriter
 
 class TensorWriter:
     def __init__(self, log_dir):
+        self.writer = None
         if is_main_process():
             self.writer = SummaryWriter(log_dir=log_dir)
 
     def update(self, meter, epoch, suffix="train"):
-        if is_main_process():
+        if is_main_process() and self.writer is not None:
             for k in meter.meters.keys():
                 self.writer.add_scalar(
                     k + "/" + suffix, meter.meters[k].global_avg, epoch
                 )
+
+    def close(self):
+        if is_main_process() and self.writer is not None:
             self.writer.close()
 
 
