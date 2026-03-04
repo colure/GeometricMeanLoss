@@ -1,9 +1,9 @@
 [project]
 name = "GML"
-version = "1.0"
+version = "1.1"
 description = "Geometric Mean Improves Loss For Few-Shot Learning"
 readme = "README.md"
-requires-python = ">=3.8, <3.9"
+requires-python = "~=3.11.0"
 dependencies = [
     "numpy==1.23.5",
     "scipy==1.10.1",

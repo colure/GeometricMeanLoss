@@ -404,8 +404,8 @@ def store_model_weights(model, checkpoint_path, checkpoint_key="model", strict=T
 
 def reduce_across_processes(val, op="SUM"):
     if not is_dist_avail_and_initialized():
-        return val if type(val) is torch.Tensor else torch.tensor(val)
-    t = val if type(val) is torch.Tensor else torch.tensor(val, device="cuda")
+        return val if isinstance(val, torch.Tensor) else torch.tensor(val)
+    t = val if isinstance(val, torch.Tensor) else torch.tensor(val, device="cuda")
     dist.barrier()
     dist.all_reduce(t)
     return t if op == "SUM" else t / get_world_size()
@@ -481,9 +481,9 @@ def load_state_dict_finetune(net, new_state_dict):
     inconsist_layer = []
     for k in new_state_dict.keys():
         if new_state_dict[k].shape != old_state_dict[k].shape:
-            l = ".".join(k.split(sep=".")[:-1])
+            layer_name = ".".join(k.split(sep=".")[:-1])
             new_state_dict[k] = old_state_dict[k].clone()
-            inconsist_layer.append(l)
+            inconsist_layer.append(layer_name)
     net.load_state_dict(new_state_dict)
     return net, inconsist_layer[-1]
 

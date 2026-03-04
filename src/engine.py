@@ -3,6 +3,8 @@ import torch
 from . import utils
 from .metrics import meta_evaluate
 from rich import box
+from rich.console import Console
+from rich.table import Table
 
 
 def evaluate(
@@ -76,43 +78,21 @@ def evaluate(
             metric_logger.meters[f"shot{s}_acc"].update(0, n=1)
             metric_logger.meters[f"shot{s}_conf"].update(0, n=1)
 
-    console = progress.console if progress and hasattr(progress, "console") else None
+    console = (
+        progress.console if progress and hasattr(progress, "console") else Console()
+    )
 
-    if console:
-        from rich.table import Table
-
-        table = Table(
-            title=f"{header} Results",
-            show_header=True,
-            header_style="bold cyan",
-            box=box.HORIZONTALS,
-        )
-        table.add_column("Metric", style="dim", width=12)
-        table.add_column("Value", justify="right", style="bold green")
-
-        for k in sorted(metric_logger.meters.keys()):
-            table.add_row(k, f"{metric_logger.meters[k].global_avg:.2f}")
-
-        console.print(table)
-        console.print()
-    else:
-        from rich.table import Table
-        from rich.console import Console
-
-        console = Console()
-        table = Table(
-            title=f"{header} Results",
-            show_header=True,
-            header_style="bold cyan",
-            box=box.HORIZONTALS,
-        )
-        table.add_column("Metric", style="dim", width=12)
-        table.add_column("Value", justify="right", style="bold green")
-
-        for k in sorted(metric_logger.meters.keys()):
-            table.add_row(k, f"{metric_logger.meters[k].global_avg:.2f}")
-
-        console.print(table)
-        console.print()
+    table = Table(
+        title=f"{header} Results",
+        show_header=True,
+        header_style="bold cyan",
+        box=box.HORIZONTALS,
+    )
+    table.add_column("Metric", style="dim", width=12)
+    table.add_column("Value", justify="right", style="bold green")
+    for k in sorted(metric_logger.meters.keys()):
+        table.add_row(k, f"{metric_logger.meters[k].global_avg:.2f}")
+    console.print(table)
+    console.print()
 
     return metric_logger

@@ -112,7 +112,7 @@ class GMLoss(nn.Module):
 
 class BCELoss(nn.BCEWithLogitsLoss):
     def __init__(self, T=1.0, logit="l2_dist", **kwargs):
-        super(BCELoss, self).__init__(reduction="sum")
+        super().__init__(reduction="sum")
         self.logit_func = logit_funcs[logit]
         self.bias = nn.Parameter(torch.zeros(1))
         self.T = T
@@ -142,7 +142,7 @@ class AsymmetricLoss(BCELoss):
         disable_torch_grad_focal_loss=True,
         **kwargs,
     ):
-        super(AsymmetricLoss, self).__init__(T, logit)
+        super().__init__(T, logit)
         self.gamma_neg = gamma_neg
         self.gamma_pos = gamma_pos
         self.clip = clip
@@ -259,7 +259,7 @@ class MatchingNet(nn.Module):
 
 class WrapperLoss(torch.nn.Module):
     def __init__(self, loss, class_proxy=None):
-        super(WrapperLoss, self).__init__()
+        super().__init__()
         self.rank = distributed.get_rank() if distributed.is_initialized() else 0
         self.loss = loss
 

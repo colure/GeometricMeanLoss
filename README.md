@@ -1,6 +1,6 @@
 # [ICIP2025] Geometric Mean Improves Loss For Few-Shot Learning
 
-[![Python](https://img.shields.io/badge/Python-3.8.20-blue?logo=python)](https://www.python.org/) [![PyTorch](https://img.shields.io/badge/PyTorch-1.12.1%20%2B%20cu121-orange?logo=pytorch)](https://pytorch.org/) [![arXiv](https://img.shields.io/badge/arXiv-2501.14593-b31b1b.svg)](https://arxiv.org/abs/2501.14593)
+[![Python](https://img.shields.io/badge/Python-3.11-blue?logo=python)](https://www.python.org/) [![PyTorch](https://img.shields.io/badge/PyTorch-1.12.1%20%2B%20cu121-orange?logo=pytorch)](https://pytorch.org/) [![arXiv](https://img.shields.io/badge/arXiv-2501.14593-b31b1b.svg)](https://arxiv.org/abs/2501.14593)
 
 Official implementation of [**"Geometric Mean Improves Loss For Few-Shot Learning"**](https://arxiv.org/abs/2501.14593), by Tong Wu and Takumi Kobayashi.
 

@@ -2,6 +2,18 @@ import datetime
 import os
 import time
 
+from rich import box
+from rich.console import Console, Group
+from rich.live import Live
+from rich.progress import (
+    BarColumn,
+    Progress,
+    SpinnerColumn,
+    TextColumn,
+    TimeElapsedColumn,
+    TimeRemainingColumn,
+)
+from rich.table import Table
 import torch
 import torch.utils.data
 from torch.utils.data.dataloader import default_collate
@@ -25,15 +37,15 @@ def main(args):
         if args.output_dir
         else None
     )
-    close_writer = lambda: writer.close() if writer is not None else None
+
+    def close_writer():
+        if writer is not None:
+            writer.close()
 
     if args.output_dir and not args.test_only:
         utils.mkdir(os.path.join(args.output_dir, "checkpoints"))
 
     utils.init_distributed_mode(args)
-    from rich.table import Table
-    from rich.console import Console
-    from rich import box
 
     console = Console()
     console.clear()
@@ -115,7 +127,7 @@ def main(args):
     model_without_ddp = model
     if args.distributed:
         model = torch.nn.parallel.DistributedDataParallel(model)
-        if len([x for x in criterion.parameters()]) > 0:
+        if next(criterion.parameters(), None) is not None:
             criterion = torch.nn.parallel.DistributedDataParallel(criterion)
         model_without_ddp = model.module
 
@@ -131,7 +143,11 @@ def main(args):
     if args.resume:
         checkpoint = torch.load(args.resume, map_location="cpu", weights_only=False)
         model_without_ddp.load_state_dict(checkpoint["model"])
-        if not args.test_only and "optimizer" in checkpoint and "lr_scheduler" in checkpoint:
+        if (
+            not args.test_only
+            and "optimizer" in checkpoint
+            and "lr_scheduler" in checkpoint
+        ):
             optimizer.load_state_dict(checkpoint["optimizer"])
             lr_scheduler.load_state_dict(checkpoint["lr_scheduler"])
         if "epoch" in checkpoint:
@@ -204,19 +220,6 @@ def main(args):
         if args.model_ema:
             metric_logger.add_meter(f"best_shot{s}_ema", utils.BestValue())
     start_time = time.time()
-
-    from rich.progress import (
-        Progress,
-        SpinnerColumn,
-        BarColumn,
-        TextColumn,
-        TimeRemainingColumn,
-        TimeElapsedColumn,
-    )
-    from rich.console import Console
-    from rich.live import Live
-    from rich.console import Group
-    from rich.table import Table
 
     class MutableRenderable:
         def __init__(self, renderable=None):
