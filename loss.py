@@ -28,6 +28,12 @@ def l1_dist(xq, xs):
 logit_funcs = {"l2_dist": l2_dist, "l1_dist": l1_dist}
 
 
+def _resolve_pos_indices(pos, yq):
+    pos_tensor = torch.as_tensor(pos, device=yq.device, dtype=torch.long)
+    query_indices = torch.arange(yq.size(0), device=yq.device)
+    return pos_tensor, query_indices
+
+
 class NCALoss(nn.Module):
     def __init__(self, T=0.9, logit="l2_dist", **kwargs):
         super().__init__()
@@ -38,9 +44,8 @@ class NCALoss(nn.Module):
     def forward(self, xq, yq, xs, ys, pos):
         with torch.no_grad():
             class_mask = yq.view(-1, 1) == ys.view(1, -1)
-            idx = (class_mask.sum(-1) > 1).cpu()
-            pos = torch.tensor(pos, device=yq.device)
-            ind = torch.arange(len(pos), device=yq.device)
+            pos, ind = _resolve_pos_indices(pos, yq)
+            idx = class_mask.sum(-1) > 1
             yq_new = torch.zeros_like(yq)
 
         logit = self.logit_func(xq, xs) / self.T
@@ -64,14 +69,14 @@ class ProtoNetLoss(nn.Module):
             classes = ys.unique()
             one_hot = ys.view(-1, 1) == classes
             class_count = one_hot.sum(0, keepdim=True)
-            yq_new = one_hot[pos].nonzero()[:, 1]
+            pos, ind = _resolve_pos_indices(pos, yq)
+            query_class_mask = one_hot[pos]
+            yq_new = query_class_mask.argmax(dim=1)
 
         mus = torch.mm(one_hot.t().float(), xs)
-        M = mus.unsqueeze(0).repeat(len(yq), 1, 1)
-        M[torch.arange(len(yq)), yq_new] -= xq
-
-        C = class_count.repeat(len(yq), 1)
-        C[torch.arange(len(yq)), yq_new] -= 1
+        query_class_mask_f = query_class_mask.to(xs.dtype)
+        M = mus.unsqueeze(0) - xq.unsqueeze(1) * query_class_mask_f.unsqueeze(-1)
+        C = class_count.to(xs.dtype).expand(yq.size(0), -1) - query_class_mask_f
 
         if self.logit_func == l2_dist:
             logit = -0.5 * (xq.unsqueeze(1) - M / C.unsqueeze(-1).clamp(min=0.1)).pow(
@@ -95,9 +100,8 @@ class GMLoss(nn.Module):
     def forward(self, xq, yq, xs, ys, pos):
         with torch.no_grad():
             class_mask = yq.view(-1, 1) == ys.view(1, -1)
-            idx = (class_mask.sum(-1) > 1).cpu()
-            pos = torch.tensor(pos, device=yq.device)
-            ind = torch.arange(len(pos), device=yq.device)
+            pos, ind = _resolve_pos_indices(pos, yq)
+            idx = class_mask.sum(-1) > 1
             class_mask[ind[idx], pos[idx]] = False
 
         logit = self.logit_func(xq, xs) / self.T
@@ -120,8 +124,7 @@ class BCELoss(nn.BCEWithLogitsLoss):
     def forward(self, xq, yq, xs, ys, pos):
         with torch.no_grad():
             one_hot_yq = yq.view(-1, 1) == ys.view(1, -1)
-            pos = torch.tensor(pos, device=yq.device)
-            ind = torch.arange(len(pos), device=yq.device)
+            pos, ind = _resolve_pos_indices(pos, yq)
 
         logit = self.logit_func(xq, xs) / self.T
         logit[ind, pos] *= 0
@@ -152,8 +155,7 @@ class AsymmetricLoss(BCELoss):
     def forward(self, xq, yq, xs, ys, pos):
         with torch.no_grad():
             one_hot_yq = yq.view(-1, 1) == ys.view(1, -1)
-            pos = torch.tensor(pos, device=yq.device)
-            ind = torch.arange(len(pos), device=yq.device)
+            pos, ind = _resolve_pos_indices(pos, yq)
 
         logit = self.logit_func(xq, xs) / self.T
         logit[ind, pos] *= 0
@@ -284,6 +286,8 @@ class WrapperLoss(torch.nn.Module):
             labels = torch.cat([labels, class_labels])
 
         pos = torch.arange(
-            batch_size * self.rank, batch_size * (self.rank + 1)
-        ).tolist()
+            batch_size * self.rank,
+            batch_size * (self.rank + 1),
+            device=local_labels.device,
+        )
         return self.loss(local_embeddings, local_labels, embeddings, labels, pos)

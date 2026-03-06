@@ -27,6 +27,8 @@ def train_one_epoch(
     )
 
     header = f"Epoch: [{epoch + 1}]"
+    num_batches = len(data_loader)
+    global_step = epoch * num_batches
     for i, (image, target) in enumerate(
         metric_logger.log_every(
             data_loader, args.print_freq, header, progress, log_layout
@@ -38,7 +40,7 @@ def train_one_epoch(
         with torch.amp.autocast("cuda", enabled=scaler is not None):
             loss = criterion(model(image)[0], target)
 
-        optimizer.zero_grad()
+        optimizer.zero_grad(set_to_none=True)
         if scaler is not None:
             scaler.scale(loss).backward()
             if args.clip_grad_norm is not None:
@@ -65,9 +67,9 @@ def train_one_epoch(
             image.shape[0] / (time.time() - start_time)
         )
         if writer:
-            writer.add_scalar("Loss/train", loss.item(), epoch * len(data_loader) + i)
+            writer.add_scalar("Loss/train", loss.item(), global_step + i)
 
         if progress and epoch_task_id is not None:
-            progress.update(epoch_task_id, advance=1.0 / len(data_loader))
+            progress.update(epoch_task_id, advance=1.0 / num_batches)
 
     return metric_logger

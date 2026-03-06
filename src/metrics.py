@@ -91,9 +91,12 @@ def metric_class_type(
 
 
 def meta_evaluate(data, train_mean, shot, num_iter, args):
-    cl2n_list = []
+    class_keys = tuple(data)
+    cl2n_list = np.empty(num_iter, dtype=np.float32)
     for _ in range(num_iter):
-        train_data, test_data, train_label, test_label = sample_case(data, shot, args)
+        train_data, test_data, train_label, test_label = sample_case(
+            data, class_keys, shot, args
+        )
         acc = metric_class_type(
             train_data,
             test_data,
@@ -104,18 +107,18 @@ def meta_evaluate(data, train_mean, shot, num_iter, args):
             train_mean=train_mean,
             norm_type=args.eval_norm_type,
         )
-        cl2n_list.append(acc)
+        cl2n_list[_] = acc
 
     if args.output_dir:
         np.save(
             os.path.join(args.output_dir, f"meta_evaluate_shot{shot}.npy"),
-            np.array(cl2n_list),
+            cl2n_list,
         )
     return compute_confidence_interval(cl2n_list)
 
 
-def sample_case(ld_dict, shot, args):
-    sample_class = random.sample(list(ld_dict.keys()), args.test_way)
+def sample_case(ld_dict, class_keys, shot, args):
+    sample_class = random.sample(class_keys, args.test_way)
     first_feat = ld_dict[sample_class[0]][0]
     feat_dim = (
         len(first_feat)
@@ -125,18 +128,19 @@ def sample_case(ld_dict, shot, args):
 
     train_input = np.empty((args.test_way * shot, feat_dim), dtype=np.float32)
     test_input = np.empty((args.test_way * args.test_query, feat_dim), dtype=np.float32)
-    train_labels, test_labels = [], []
+    train_labels = np.empty(args.test_way * shot, dtype=np.int64)
+    test_labels = np.empty(args.test_way * args.test_query, dtype=np.int64)
     train_ptr, test_ptr = 0, 0
 
     for each_class in sample_class:
-        samples = np.array(
+        samples = np.asarray(
             random.sample(ld_dict[each_class], shot + args.test_query), dtype=np.float32
         )
         train_input[train_ptr : train_ptr + shot] = samples[:shot]
         test_input[test_ptr : test_ptr + args.test_query] = samples[shot:]
+        train_labels[train_ptr : train_ptr + shot] = each_class
+        test_labels[test_ptr : test_ptr + args.test_query] = each_class
         train_ptr += shot
         test_ptr += args.test_query
-        train_labels.extend([each_class] * shot)
-        test_labels.extend([each_class] * args.test_query)
 
-    return train_input, test_input, np.array(train_labels), np.array(test_labels)
+    return train_input, test_input, train_labels, test_labels

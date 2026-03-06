@@ -86,35 +86,38 @@ def main(args):
 
     args.num_classes = len(dataset.classes)
     collate_fn = default_collate
+    data_loader_kwargs = {
+        "num_workers": args.workers,
+        "pin_memory": True,
+    }
+    if args.workers > 0:
+        data_loader_kwargs["persistent_workers"] = True
+        data_loader_kwargs["prefetch_factor"] = 2
 
     data_loader = torch.utils.data.DataLoader(
         dataset,
         batch_size=args.batch_size,
         sampler=train_sampler,
-        num_workers=args.workers,
-        pin_memory=True,
         collate_fn=collate_fn,
+        **data_loader_kwargs,
     )
     data_loader_avg = torch.utils.data.DataLoader(
         dataset_avg,
         batch_size=args.batch_size,
         sampler=train_avg_sampler,
-        num_workers=args.workers,
-        pin_memory=True,
+        **data_loader_kwargs,
     )
     data_loader_val = torch.utils.data.DataLoader(
         dataset_val,
         batch_size=args.batch_size,
         sampler=val_sampler,
-        num_workers=args.workers,
-        pin_memory=True,
+        **data_loader_kwargs,
     )
     data_loader_test = torch.utils.data.DataLoader(
         dataset_test,
         batch_size=args.batch_size,
         sampler=test_sampler,
-        num_workers=args.workers,
-        pin_memory=True,
+        **data_loader_kwargs,
     )
 
     model = factory.create_model(args)

@@ -30,14 +30,16 @@ class RASampler(torch.utils.data.Sampler):
         if self.shuffle:
             g = torch.Generator()
             g.manual_seed(self.seed + self.epoch)
-            indices = torch.randperm(len(self.dataset), generator=g).tolist()
+            indices = torch.randperm(len(self.dataset), generator=g)
         else:
-            indices = list(range(len(self.dataset)))
+            indices = torch.arange(len(self.dataset))
 
-        indices = [ele for ele in indices for _ in range(self.repetitions)]
-        indices += indices[: (self.total_size - len(indices))]
+        indices = indices.repeat_interleave(self.repetitions)
+        padding_size = self.total_size - indices.numel()
+        if padding_size > 0:
+            indices = torch.cat((indices, indices[:padding_size]))
         indices = indices[self.rank : self.total_size : self.num_replicas]
-        return iter(indices[: self.num_selected_samples])
+        return iter(indices[: self.num_selected_samples].tolist())
 
     def __len__(self):
         return self.num_selected_samples
@@ -50,11 +52,14 @@ class ClassAwareDistributedSampler(torch.utils.data.distributed.DistributedSampl
     def __init__(self, dataset, class_per_batch, sample_per_class, **kwargs) -> None:
         super().__init__(dataset, **kwargs)
         self.y = torch.tensor([y[1] for y in dataset.samples])
-        max_samp_num = max([(self.y == c).sum().item() for c in self.y.unique()])
-        num_samples = max_samp_num * len(self.y.unique())
+        self.classes = self.y.unique()
+        self.class_indices = [torch.nonzero(self.y == c).flatten() for c in self.classes]
+        max_samp_num = max(len(indices) for indices in self.class_indices)
+        num_samples = max_samp_num * len(self.class_indices)
         self.num_samples = math.ceil(num_samples / self.num_replicas)
         self.total_size = self.num_samples * self.num_replicas
-        self.samples_in_batch = [class_per_batch, sample_per_class]
+        self.class_per_batch = class_per_batch
+        self.sample_per_class = sample_per_class
 
     def __iter__(self):
         g = torch.Generator()
@@ -66,27 +71,29 @@ class ClassAwareDistributedSampler(torch.utils.data.distributed.DistributedSampl
         else:
             indices = indices[: self.total_size]
         indices = indices[self.rank : self.total_size : self.num_replicas]
-        return iter(
-            self.get_sublist(
-                indices,
-                self.samples_in_batch[0]
-                * self.samples_in_batch[1]
-                // self.num_replicas,
-            )
+        batch_size_per_replica = (
+            self.class_per_batch * self.sample_per_class // self.num_replicas
         )
+        return iter(self.get_sublist(indices, batch_size_per_replica))
 
     def class_aware_shuffle(self, g):
-        bc, bn = self.samples_in_batch
-        cls_to_ind = [torch.nonzero(self.y == c).squeeze() for c in self.y.unique()]
-        max_samp_num = max([len(x) for x in cls_to_ind])
-        cls_to_ind = torch.stack(
-            [self.randshuffle(self.append(x, max_samp_num, g), g) for x in cls_to_ind]
+        max_samp_num = max(len(indices) for indices in self.class_indices)
+        shuffled_by_class = torch.stack(
+            [self.randshuffle(self.append(indices, max_samp_num, g), g) for indices in self.class_indices]
         )
-        D = [self.randshuffle(x, g).flatten() for x in self.split(cls_to_ind, bn)]
-        batches = torch.cat(
-            [self.randshuffle(x, g) for x in self.split(torch.cat(D), bc * bn)]
+        grouped_samples = [
+            self.randshuffle(chunk, g).flatten()
+            for chunk in self.split(shuffled_by_class, self.sample_per_class)
+        ]
+        flat_indices = torch.cat(grouped_samples)
+        return torch.cat(
+            [
+                self.randshuffle(chunk, g)
+                for chunk in self.split(
+                    flat_indices, self.class_per_batch * self.sample_per_class
+                )
+            ]
         )
-        return batches
 
     def randshuffle(self, x, g):
         return x[torch.randperm(len(x), generator=g)]
